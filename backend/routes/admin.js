@@ -4,16 +4,52 @@ const adminRouter = Router()
 
 const { adminModel } = require("../db")
 
-adminRouter.post("/signup", function(req, res){
+const jwt = require("jsonwebtoken")
+
+const JWT_ADMIN_PASSWORD = "JWT_ADMIN_PASSWORD"
+
+adminRouter.post("/signup", async function(req, res){
+    const { email, password, firstName, lastName } = req.body; // TODO: adding zod validation
+    // TODO: hash the password ( bcrypt )
+
+    // TODO: put inside a try-catch block
+    await adminModel.create({
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName
+    })
+
     res.json({
-        message: "admin signup endpoint"
+        message: "SignUp Succeeded"
     })
 })
 
-adminRouter.post("/login", function(req, res){
-    res.json({
-        message: "admin login endpoint"
+adminRouter.post("/login", async function(req, res){
+    const { email, password } = req.body;
+
+    // TODO: ideally password should be hashed
+
+    const admin = await adminModel.findOne({
+        email: email,
+        password: password
     })
+
+    if (admin){
+        const token = jwt.sign({
+            id: admin._id
+        }, JWT_ADMIN_PASSWORD);
+
+        // Do cookie logic
+
+        res.json({
+            token: token
+        })
+    } else{
+        res.status(403).json({
+            message: "Incorrect Credentials"
+        })
+    }
 })
 
 // adminRouter.use(adminMiddleware)
